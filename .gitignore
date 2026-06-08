@@ -28,6 +28,4 @@ dist/
 # Logs
 *.log
 
-notes
-
-/docs
+/docs-internal
