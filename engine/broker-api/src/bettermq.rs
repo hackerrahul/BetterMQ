@@ -420,8 +420,7 @@ fn dlq_source_label(state: &AppState, dlq_topic_name: &str) -> (String, String, 
         if let Some((ids, _)) = rest.split_once(".__dlq") {
             let parts: Vec<&str> = ids.splitn(2, '.').collect();
             if parts.len() == 2 {
-                if let (Ok(gid), Ok(mid)) = (Uuid::parse_str(parts[0]), Uuid::parse_str(parts[1]))
-                {
+                if let (Ok(gid), Ok(mid)) = (Uuid::parse_str(parts[0]), Uuid::parse_str(parts[1])) {
                     let group_name = state
                         .broker
                         .get_group(gid)
@@ -452,11 +451,7 @@ fn dlq_source_label(state: &AppState, dlq_topic_name: &str) -> (String, String, 
             Some(queue.to_string()),
         );
     }
-    (
-        "other".into(),
-        dlq_topic_name.to_string(),
-        None,
-    )
+    ("other".into(), dlq_topic_name.to_string(), None)
 }
 
 fn collect_dlq_topic_candidates(state: &AppState) -> Result<Vec<String>, ApiError> {
@@ -641,7 +636,9 @@ async fn delete_dlq_message(
     Query(q): Query<DeleteDlqQuery>,
 ) -> Result<StatusCode, ApiError> {
     if !is_dlq_topic(&q.dlq_topic) {
-        return Err(ApiError::BadRequest("dlq_topic must end with .__dlq".into()));
+        return Err(ApiError::BadRequest(
+            "dlq_topic must end with .__dlq".into(),
+        ));
     }
     let removed = state
         .broker

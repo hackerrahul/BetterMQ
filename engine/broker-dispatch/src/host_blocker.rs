@@ -106,17 +106,14 @@ impl HostBlocker {
             host.trim().to_string()
         };
         let wait = Duration::from_millis(duration_ms.max(1_000));
-        self.hosts
-            .lock()
-            .expect("host blocker lock")
-            .insert(
-                key.clone(),
-                HostState {
-                    failures: self.cfg.failures_before_block,
-                    blocked_until: Some(Instant::now() + wait),
-                    cooldown_ms: duration_ms,
-                },
-            );
+        self.hosts.lock().expect("host blocker lock").insert(
+            key.clone(),
+            HostState {
+                failures: self.cfg.failures_before_block,
+                blocked_until: Some(Instant::now() + wait),
+                cooldown_ms: duration_ms,
+            },
+        );
         tracing::warn!(host = %key, cooldown_ms = wait.as_millis(), "host manually blocked");
         key
     }

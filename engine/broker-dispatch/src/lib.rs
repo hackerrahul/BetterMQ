@@ -12,7 +12,9 @@ pub use fairness::TenantFairQueue;
 
 pub use flow_control::{FlowControlInfo, FlowController, FlowKey, GlobalParallelismInfo};
 pub use host_blocker::{HostBlocker, HostBlockerConfig};
-pub use memory_guard::{MemoryGuard, MemoryGuardConfig, ProcessResourceStats, sample_process_resources};
+pub use memory_guard::{
+    sample_process_resources, MemoryGuard, MemoryGuardConfig, ProcessResourceStats,
+};
 pub use worker::{DeliveryJob, DeliveryPriority, DispatchConfig, DispatchEngine};
 
 pub use broker_partition::dlq_topic;

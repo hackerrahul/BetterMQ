@@ -14,7 +14,6 @@ on:
 
 permissions:
   contents: write
-  actions: read
 
 env:
   CARGO_TERM_COLOR: always
@@ -26,7 +25,7 @@ jobs:
       version: ${{ steps.bump.outputs.version }}
       tag: ${{ steps.bump.outputs.tag }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -98,7 +97,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           ref: ${{ needs.bump.outputs.tag }}
 
@@ -121,7 +120,7 @@ jobs:
             cp "target/${{ matrix.target }}/release/bettermq" "dist/${{ matrix.artifact }}"
           fi
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
           path: dist/${{ matrix.artifact }}
@@ -130,7 +129,7 @@ jobs:
     needs: [bump, build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
@@ -145,7 +144,7 @@ jobs:
           done
           ls -la
 
-      - uses: softprops/action-gh-release@v3
+      - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.bump.outputs.tag }}
           name: BetterMQ ${{ needs.bump.outputs.version }}
