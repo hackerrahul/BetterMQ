@@ -14,6 +14,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 env:
   CARGO_TERM_COLOR: always
@@ -65,16 +66,41 @@ jobs:
             engine/broker-server/openapi/bettermq.openapi.json > /tmp/openapi.json
           mv /tmp/openapi.json engine/broker-server/openapi/bettermq.openapi.json
 
-      - name: Commit version bump and tag
+      - name: Commit version bump, tag, and push release branch
+        id: release_branch
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add Cargo.toml engine/broker-server/openapi/bettermq.openapi.json
-          git diff --staged --quiet && echo "Nothing to commit" && exit 0
-          git commit -m "chore(release): ${{ steps.bump.outputs.tag }}"
-          git tag "${{ steps.bump.outputs.tag }}"
-          git push origin HEAD:"${{ github.ref_name }}"
-          git push origin "${{ steps.bump.outputs.tag }}"
+          if git diff --staged --quiet; then
+            echo "Nothing to commit"
+            exit 0
+          fi
+          TAG="${{ steps.bump.outputs.tag }}"
+          BRANCH="chore/release-${TAG}"
+          git commit -m "chore(release): ${TAG}"
+          git tag "${TAG}"
+          git checkout -b "${BRANCH}"
+          git push origin "${BRANCH}" "${TAG}"
+          echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+
+      - name: Open pull request to main
+        if: steps.release_branch.outputs.branch != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.bump.outputs.tag }}"
+          BRANCH="${{ steps.release_branch.outputs.branch }}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          BODY="Automated version bump from the [Release workflow](${RUN_URL}).
+
+          - Bumps \`Cargo.toml\` and OpenAPI \`info.version\` to **${{ steps.bump.outputs.version }}**
+          - Tag **${TAG}** is already pushed; build + GitHub release follow in this workflow run
+          - Merge this PR after the release is published so \`main\` stays in sync (requires **rust** CI)"
+          gh pr create --base main --head "${BRANCH}" --title "chore(release): ${TAG}" --body "${BODY}" \
+            || gh pr view "${BRANCH}" --json url --jq .url
 
   build:
     needs: bump
