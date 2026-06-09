@@ -4,7 +4,7 @@
 
 <img width="1774" height="887" alt="image" src="./docs/assets/gh-banner.png" />
 
-[bettermq.com](https://bettermq.com) · [Interactive API docs](https://github.com/hackerrahul/BetterMQ) (`/docs` when running)
+[bettermq.com](https://bettermq.com) · [Interactive API docs](https://github.com/hackerrahul/BetterMQ) (`/docs` when running) · [LLM docs](https://bettermq.com/llms.txt) (full guide: `llm.txt` / `llms.txt`)
 
 ---
 
