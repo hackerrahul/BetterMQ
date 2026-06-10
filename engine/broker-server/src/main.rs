@@ -10,8 +10,7 @@ use broker_cli::{
 };
 use broker_config::{
     ensure_cluster_config, load_config, load_managed_config, managed_config_path,
-    resolve_from_path, resolve_serve, write_config, BetterMqConfig, ResolvedAuth,
-    ResolvedServeSettings, ServeOverrides,
+    resolve_from_path, resolve_serve, write_config, BetterMqConfig, ResolvedAuth, ServeOverrides,
 };
 use broker_dispatch::{DispatchConfig, DispatchEngine};
 use broker_partition::{Broker, BrokerConfig, PublishRequest};
@@ -29,6 +28,7 @@ use tower_http::{
 mod cluster_health;
 mod docs;
 mod panel;
+mod startup_banner;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 use uuid::Uuid;
@@ -365,14 +365,14 @@ async fn serve(args: ServeArgs) -> anyhow::Result<()> {
         .layer(cors)
         .layer(TraceLayer::new_for_http());
 
-    info!("API docs at /docs and /api-reference (OpenAPI at /openapi.json)");
-    info!("control panel at /panel/");
-
     let listener = tokio::net::TcpListener::bind(settings.listen)
         .await
         .with_context(|| format!("bind {}", settings.listen))?;
 
-    log_startup(&settings, storage, postgres);
+    startup_banner::print(&settings, storage);
+    if postgres {
+        info!("cloud auth enabled (postgres)");
+    }
 
     let shutdown = async {
         let _ = tokio::signal::ctrl_c().await;
@@ -384,18 +384,6 @@ async fn serve(args: ServeArgs) -> anyhow::Result<()> {
         .context("HTTP server exited with error")?;
 
     Ok(())
-}
-
-fn log_startup(settings: &ResolvedServeSettings, storage: StorageMode, postgres: bool) {
-    info!(
-        listen = %settings.listen,
-        data_dir = %settings.data_dir.display(),
-        tenant = broker_partition::DEFAULT_TENANT,
-        cluster = settings.cluster_enabled,
-        storage = ?storage,
-        postgres,
-        "bettermq listening"
-    );
 }
 
 fn spawn_schedule_worker(state: Arc<AppState>) {
